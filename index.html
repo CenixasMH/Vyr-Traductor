@@ -10,7 +10,7 @@
             margin: 0;
             padding: 20px;
             min-height: 100vh;
-            color: #000; /* Texto negro */
+            color: #000;
             background: url('https://i.postimg.cc/qMbDWrp3/0485bb47-2a16-4707-9755-1d6bb2bb1fa5.jpg') center/cover fixed no-repeat;
             display: flex;
             flex-direction: column;
@@ -78,12 +78,41 @@
             cursor: pointer;
         }
 
-        .result {
+        .result-container {
             margin-top: 20px;
-            padding: 10px;
+            position: relative;
+            width: 100%;
+        }
+
+        .result {
+            padding: 15px;
             border-radius: 6px;
             background-color: rgba(255,255,255,0.9);
-            color: #000; /* Texto negro */
+            color: #000;
+            text-align: left;
+            word-break: break-word;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(100, 180, 255, 0.7); /* Azul claro semitransparente */
+            border: none;
+            border-radius: 4px;
+            padding: 5px 8px;
+            cursor: pointer;
+            color: white;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(100, 180, 255, 0.9);
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
@@ -108,8 +137,11 @@
             <button onclick="startDecoding()">Decodificar Texto</button>
         </div>
         
-        <div id="result" class="result" style="display:none;">
-            <!-- Aquí aparecerá el resultado -->
+        <div id="result-container" class="result-container" style="display:none;">
+            <button class="copy-btn" onclick="copyResult()">
+                <i class="far fa-copy"></i> Copiar
+            </button>
+            <div id="result" class="result"></div>
         </div>
     </div>
 
@@ -152,9 +184,26 @@
         }
 
         function showResult(title, text) {
+            const resultContainer = document.getElementById('result-container');
             const resultDiv = document.getElementById('result');
+            
             resultDiv.innerHTML = `<h3>${title}</h3><p>${text}</p>`;
-            resultDiv.style.display = 'block';
+            resultContainer.style.display = 'block';
+        }
+
+        function copyResult() {
+            const resultText = document.getElementById('result').innerText;
+            navigator.clipboard.writeText(resultText.split('\n')[1])
+                .then(() => {
+                    const copyBtn = document.querySelector('.copy-btn');
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '<i class="far fa-copy"></i> Copiar';
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Error al copiar: ', err);
+                });
         }
     </script>
 </body>
