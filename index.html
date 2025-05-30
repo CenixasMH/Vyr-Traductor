@@ -113,6 +113,12 @@
             margin: 0;
         }
 
+        .roman-numeral {
+            font-family: 'Times New Roman', serif;
+            font-weight: bold;
+            color: #8B4513; /* Color marrón para distinguirlos */
+        }
+
         .copy-btn {
             position: absolute;
             top: 5px;
@@ -197,29 +203,101 @@
             decodeMap[codeMap[key]] = key;
         }
 
-        let currentTranslatedText = ''; // Variable para almacenar el texto traducido
+        const romanNumerals = [
+            { value: 1000, symbol: 'M' },
+            { value: 900, symbol: 'CM' },
+            { value: 500, symbol: 'D' },
+            { value: 400, symbol: 'CD' },
+            { value: 100, symbol: 'C' },
+            { value: 90, symbol: 'XC' },
+            { value: 50, symbol: 'L' },
+            { value: 40, symbol: 'XL' },
+            { value: 10, symbol: 'X' },
+            { value: 9, symbol: 'IX' },
+            { value: 5, symbol: 'V' },
+            { value: 4, symbol: 'IV' },
+            { value: 1, symbol: 'I' }
+        ];
+
+        let currentTranslatedText = '';
+        let currentDisplayText = '';
 
         function startEncoding() {
             const input = prompt("Escribe el texto a codificar:");
             if (input) {
-                currentTranslatedText = translate(input, codeMap);
-                showResult("Texto codificado:", currentTranslatedText);
+                currentTranslatedText = translate(input, codeMap, true);
+                currentDisplayText = formatRomanNumerals(currentTranslatedText);
+                showResult("Texto codificado:", currentDisplayText);
             }
         }
 
         function startDecoding() {
             const input = prompt("Escribe el texto a decodificar:");
             if (input) {
-                currentTranslatedText = translate(input, decodeMap);
-                showResult("Texto decodificado:", currentTranslatedText);
+                currentTranslatedText = translate(input, decodeMap, false);
+                currentDisplayText = formatRomanNumerals(currentTranslatedText, true);
+                showResult("Texto decodificado:", currentDisplayText);
             }
         }
 
-        function translate(text, mapping) {
+        function translate(text, mapping, isEncoding) {
             return text.split('').map(char => {
                 const lowerChar = char.toLowerCase();
+                
+                // Si es un número y estamos codificando, convertirlo a romano
+                if (isEncoding && /[0-9]/.test(char)) {
+                    return numberToRoman(parseInt(char));
+                }
+                // Si es un número romano y estamos decodificando, convertirlo a arábigo
+                else if (!isEncoding && /[IVXLCDMθ]/.test(char.toUpperCase())) {
+                    return romanToNumber(text) || char;
+                }
+                // Mapeo normal de caracteres
                 return mapping[lowerChar] || char;
             }).join('');
+        }
+
+        function numberToRoman(num) {
+            if (num === 0) return 'θ'; // Usamos θ para el cero
+            let roman = '';
+            for (const { value, symbol } of romanNumerals) {
+                while (num >= value) {
+                    roman += symbol;
+                    num -= value;
+                }
+            }
+            return roman;
+        }
+
+        function romanToNumber(romanStr) {
+            let str = romanStr.toUpperCase();
+            // Reemplazar θ por 0 primero
+            str = str.replace(/θ/g, '0');
+            
+            let total = 0;
+            let i = 0;
+            
+            while (i < str.length) {
+                // Buscar el mayor símbolo posible
+                for (const { value, symbol } of romanNumerals) {
+                    if (str.startsWith(symbol, i)) {
+                        total += value;
+                        i += symbol.length;
+                        break;
+                    }
+                }
+            }
+            
+            return total > 0 ? total.toString() : str.includes('0') ? '0' : null;
+        }
+
+        function formatRomanNumerals(text, isDecoding = false) {
+            // Patrón para identificar números romanos (incluyendo θ)
+            const pattern = isDecoding ? /[0-9]/g : /[IVXLCDMθ]/g;
+            
+            return text.replace(pattern, match => {
+                return `<span class="roman-numeral">${match}</span>`;
+            });
         }
 
         function showResult(title, text) {
@@ -228,14 +306,13 @@
             const resultContent = document.getElementById('result-content');
             
             resultTitle.textContent = title;
-            resultContent.textContent = text;
+            resultContent.innerHTML = text; // Usamos innerHTML para renderizar los spans
             resultContainer.classList.remove('hidden');
         }
 
         function copyResult() {
             const copyBtn = document.querySelector('.copy-btn');
             
-            // Aplicar efecto visual
             copyBtn.classList.add('copied');
             
             navigator.clipboard.writeText(currentTranslatedText)
@@ -246,7 +323,6 @@
                 })
                 .catch(err => {
                     console.error('Error al copiar: ', err);
-                    // Fallback para navegadores antiguos
                     const textarea = document.createElement('textarea');
                     textarea.value = currentTranslatedText;
                     document.body.appendChild(textarea);
