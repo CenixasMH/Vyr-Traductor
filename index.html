@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traductor Vyrllero</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #000; /* Texto negro */
+            background: url('https://i.postimg.cc/qMbDWrp3/0485bb47-2a16-4707-9755-1d6bb2bb1fa5.jpg') center/cover fixed no-repeat;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h1 {
+            color: #000;
+            margin-bottom: 10px;
+        }
+
+        .contact-header {
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .social-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+
+        .whatsapp-btn {
+            background-color: #25D366;
+        }
+
+        .facebook-btn {
+            background-color: #1877F2;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 6px;
+            background-color: rgba(255,255,255,0.9);
+            color: #000; /* Texto negro */
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Traductor Vyrllero</h1>
+        
+        <div class="contact-header">Contacto con mi creador:</div>
+        
+        <div class="social-buttons">
+            <a href="https://wa.me/5353718509" class="social-btn whatsapp-btn" target="_blank">
+                <i class="fab fa-whatsapp"></i> WhatsApp
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61554495548506" class="social-btn facebook-btn" target="_blank">
+                <i class="fab fa-facebook-f"></i> Facebook
+            </a>
+        </div>
+        
+        <div class="buttons">
+            <button onclick="startEncoding()">Codificar Texto</button>
+            <button onclick="startDecoding()">Decodificar Texto</button>
+        </div>
+        
+        <div id="result" class="result" style="display:none;">
+            <!-- Aquí aparecerá el resultado -->
+        </div>
+    </div>
+
+    <script>
+        const codeMap = {
+            'q': '1', 'w': '2', 'e': '3', 'r': '4', 't': '5',
+            'y': '6', 'u': '7', 'i': '8', 'o': '9', 'p': '0',
+            'a': '@', 's': '#', 'd': '$', 'f': '_', 'g': '&',
+            'h': '-', 'j': '+', 'k': '(', 'l': ')', 'ñ': '/',
+            'z': '*', 'x': '"', 'c': "'", 'v': ':', 'b': ';',
+            'n': '!', 'm': '?'
+        };
+
+        const decodeMap = {};
+        for (const key in codeMap) {
+            decodeMap[codeMap[key]] = key;
+        }
+
+        function startEncoding() {
+            const input = prompt("Escribe el texto a codificar:");
+            if (input) {
+                const result = translate(input, codeMap);
+                showResult("Texto codificado:", result);
+            }
+        }
+
+        function startDecoding() {
+            const input = prompt("Escribe el texto a decodificar:");
+            if (input) {
+                const result = translate(input, decodeMap);
+                showResult("Texto decodificado:", result);
+            }
+        }
+
+        function translate(text, mapping) {
+            return text.split('').map(char => {
+                const lowerChar = char.toLowerCase();
+                return mapping[lowerChar] || char;
+            }).join('');
+        }
+
+        function showResult(title, text) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<h3>${title}</h3><p>${text}</p>`;
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
