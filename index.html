@@ -46,7 +46,7 @@
         .social-btn {
             display: inline-flex;
             align-items: center;
-            padding: 8px 12px;
+            padding: 8px 15px;
             border-radius: 6px;
             text-decoration: none;
             color: white;
@@ -59,6 +59,11 @@
 
         .facebook-btn {
             background-color: #1877F2;
+        }
+
+        .social-icon {
+            margin-right: 8px; /* Espacio entre icono y texto */
+            font-size: 16px;
         }
 
         .buttons {
@@ -82,6 +87,7 @@
             margin-top: 20px;
             position: relative;
             width: 100%;
+            min-height: 50px;
         }
 
         .result {
@@ -97,14 +103,17 @@
             position: absolute;
             top: 5px;
             right: 5px;
-            background: rgba(100, 180, 255, 0.7); /* Azul claro semitransparente */
+            background: rgba(100, 180, 255, 0.7);
             border: none;
             border-radius: 4px;
             padding: 5px 8px;
             cursor: pointer;
             color: white;
             font-size: 12px;
-            transition: all 0.2s;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .copy-btn:hover {
@@ -112,7 +121,11 @@
         }
 
         .copy-btn:active {
-            transform: scale(0.95);
+            transform: none;
+        }
+
+        .hidden {
+            display: none;
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
@@ -125,10 +138,12 @@
         
         <div class="social-buttons">
             <a href="https://wa.me/5353718509" class="social-btn whatsapp-btn" target="_blank">
-                <i class="fab fa-whatsapp"></i> WhatsApp
+                <i class="fab fa-whatsapp social-icon"></i>
+                WhatsApp
             </a>
             <a href="https://www.facebook.com/profile.php?id=61554495548506" class="social-btn facebook-btn" target="_blank">
-                <i class="fab fa-facebook-f"></i> Facebook
+                <i class="fab fa-facebook-f social-icon"></i>
+                Facebook
             </a>
         </div>
         
@@ -137,7 +152,7 @@
             <button onclick="startDecoding()">Decodificar Texto</button>
         </div>
         
-        <div id="result-container" class="result-container" style="display:none;">
+        <div id="result-container" class="result-container hidden">
             <button class="copy-btn" onclick="copyResult()">
                 <i class="far fa-copy"></i> Copiar
             </button>
@@ -188,21 +203,38 @@
             const resultDiv = document.getElementById('result');
             
             resultDiv.innerHTML = `<h3>${title}</h3><p>${text}</p>`;
-            resultContainer.style.display = 'block';
+            resultContainer.classList.remove('hidden');
         }
 
         function copyResult() {
             const resultText = document.getElementById('result').innerText;
-            navigator.clipboard.writeText(resultText.split('\n')[1])
+            const textToCopy = resultText.split('\n')[1] || resultText;
+            
+            navigator.clipboard.writeText(textToCopy)
                 .then(() => {
                     const copyBtn = document.querySelector('.copy-btn');
+                    const originalHTML = copyBtn.innerHTML;
+                    
                     copyBtn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
                     setTimeout(() => {
-                        copyBtn.innerHTML = '<i class="far fa-copy"></i> Copiar';
+                        copyBtn.innerHTML = originalHTML;
                     }, 2000);
                 })
                 .catch(err => {
                     console.error('Error al copiar: ', err);
+                    const textarea = document.createElement('textarea');
+                    textarea.value = textToCopy;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    
+                    const copyBtn = document.querySelector('.copy-btn');
+                    const originalHTML = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalHTML;
+                    }, 2000);
                 });
         }
     </script>
