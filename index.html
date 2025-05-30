@@ -62,7 +62,7 @@
         }
 
         .social-icon {
-            margin-right: 8px; /* Espacio entre icono y texto */
+            margin-right: 8px;
             font-size: 16px;
         }
 
@@ -81,6 +81,11 @@
             color: white;
             font-weight: bold;
             cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.95);
         }
 
         .result-container {
@@ -110,7 +115,7 @@
             cursor: pointer;
             color: white;
             font-size: 12px;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 4px;
@@ -121,7 +126,12 @@
         }
 
         .copy-btn:active {
-            transform: none;
+            transform: scale(0.90);
+        }
+
+        .copy-btn.copied {
+            background: rgba(76, 175, 80, 0.9);
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.5);
         }
 
         .hidden {
@@ -209,19 +219,20 @@
         function copyResult() {
             const resultText = document.getElementById('result').innerText;
             const textToCopy = resultText.split('\n')[1] || resultText;
+            const copyBtn = document.querySelector('.copy-btn');
+            
+            // Aplicar efecto visual
+            copyBtn.classList.add('copied');
             
             navigator.clipboard.writeText(textToCopy)
                 .then(() => {
-                    const copyBtn = document.querySelector('.copy-btn');
-                    const originalHTML = copyBtn.innerHTML;
-                    
-                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
                     setTimeout(() => {
-                        copyBtn.innerHTML = originalHTML;
-                    }, 2000);
+                        copyBtn.classList.remove('copied');
+                    }, 1000);
                 })
                 .catch(err => {
                     console.error('Error al copiar: ', err);
+                    // Fallback para navegadores antiguos
                     const textarea = document.createElement('textarea');
                     textarea.value = textToCopy;
                     document.body.appendChild(textarea);
@@ -229,12 +240,9 @@
                     document.execCommand('copy');
                     document.body.removeChild(textarea);
                     
-                    const copyBtn = document.querySelector('.copy-btn');
-                    const originalHTML = copyBtn.innerHTML;
-                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
                     setTimeout(() => {
-                        copyBtn.innerHTML = originalHTML;
-                    }, 2000);
+                        copyBtn.classList.remove('copied');
+                    }, 1000);
                 });
         }
     </script>
