@@ -116,7 +116,7 @@
         .roman-numeral {
             font-family: 'Times New Roman', serif;
             font-weight: bold;
-            color: #8B4513; /* Color marrón para distinguirlos */
+            color: #8B4513;
         }
 
         .copy-btn {
@@ -220,45 +220,90 @@
         ];
 
         let currentTranslatedText = '';
-        let currentDisplayText = '';
 
         function startEncoding() {
             const input = prompt("Escribe el texto a codificar:");
             if (input) {
-                currentTranslatedText = translate(input, codeMap, true);
-                currentDisplayText = formatRomanNumerals(currentTranslatedText);
-                showResult("Texto codificado:", currentDisplayText);
+                currentTranslatedText = encodeText(input);
+                showResult("Texto codificado:", formatDisplayText(currentTranslatedText, true));
             }
         }
 
         function startDecoding() {
             const input = prompt("Escribe el texto a decodificar:");
             if (input) {
-                currentTranslatedText = translate(input, decodeMap, false);
-                currentDisplayText = formatRomanNumerals(currentTranslatedText, true);
-                showResult("Texto decodificado:", currentDisplayText);
+                currentTranslatedText = decodeText(input);
+                showResult("Texto decodificado:", formatDisplayText(currentTranslatedText));
             }
         }
 
-        function translate(text, mapping, isEncoding) {
-            return text.split('').map(char => {
+        function encodeText(text) {
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
                 const lowerChar = char.toLowerCase();
                 
-                // Si es un número y estamos codificando, convertirlo a romano
-                if (isEncoding && /[0-9]/.test(char)) {
-                    return numberToRoman(parseInt(char));
+                if (/[0-9]/.test(char)) {
+                    // Convertir número a romano
+                    result += numberToRoman(parseInt(char));
+                } else if (codeMap[lowerChar]) {
+                    // Mapear caracteres especiales
+                    result += codeMap[lowerChar];
+                } else {
+                    // Mantener otros caracteres
+                    result += char;
                 }
-                // Si es un número romano y estamos decodificando, convertirlo a arábigo
-                else if (!isEncoding && /[IVXLCDMθ]/.test(char.toUpperCase())) {
-                    return romanToNumber(text) || char;
+            }
+            return result;
+        }
+
+        function decodeText(text) {
+            let result = '';
+            let i = 0;
+            
+            while (i < text.length) {
+                const char = text[i];
+                
+                // Manejar θ como 0
+                if (char === 'θ') {
+                    result += '0';
+                    i++;
+                    continue;
                 }
-                // Mapeo normal de caracteres
-                return mapping[lowerChar] || char;
-            }).join('');
+                
+                // Intentar decodificar números romanos
+                const romanResult = tryDecodeRoman(text, i);
+                if (romanResult) {
+                    result += romanResult.number;
+                    i += romanResult.length;
+                    continue;
+                }
+                
+                // Mapear caracteres especiales
+                if (decodeMap[char]) {
+                    result += decodeMap[char];
+                } else {
+                    result += char;
+                }
+                i++;
+            }
+            return result;
+        }
+
+        function tryDecodeRoman(text, startIndex) {
+            let maxLength = Math.min(5, text.length - startIndex); // Máximo 5 caracteres para numerales romanos
+            for (let len = maxLength; len >= 1; len--) {
+                const substr = text.substr(startIndex, len);
+                const number = romanToNumber(substr);
+                if (number !== null) {
+                    return { number, length: len };
+                }
+            }
+            return null;
         }
 
         function numberToRoman(num) {
-            if (num === 0) return 'θ'; // Usamos θ para el cero
+            if (num === 0) return 'θ';
             let roman = '';
             for (const { value, symbol } of romanNumerals) {
                 while (num >= value) {
@@ -270,32 +315,33 @@
         }
 
         function romanToNumber(romanStr) {
-            let str = romanStr.toUpperCase();
-            // Reemplazar θ por 0 primero
-            str = str.replace(/θ/g, '0');
+            const str = romanStr.toUpperCase();
+            if (!/^[IVXLCDM]+$/.test(str)) return null;
             
             let total = 0;
             let i = 0;
             
             while (i < str.length) {
-                // Buscar el mayor símbolo posible
+                let found = false;
                 for (const { value, symbol } of romanNumerals) {
                     if (str.startsWith(symbol, i)) {
                         total += value;
                         i += symbol.length;
+                        found = true;
                         break;
                     }
                 }
+                if (!found) return null; // Carácter no válido en numeral romano
             }
             
-            return total > 0 ? total.toString() : str.includes('0') ? '0' : null;
+            return total > 0 ? total.toString() : null;
         }
 
-        function formatRomanNumerals(text, isDecoding = false) {
-            // Patrón para identificar números romanos (incluyendo θ)
-            const pattern = isDecoding ? /[0-9]/g : /[IVXLCDMθ]/g;
+        function formatDisplayText(text, showRoman = false) {
+            if (!showRoman) return text;
             
-            return text.replace(pattern, match => {
+            // Solo formatear números romanos durante la codificación
+            return text.replace(/[IVXLCDMθ]/g, match => {
                 return `<span class="roman-numeral">${match}</span>`;
             });
         }
@@ -306,7 +352,7 @@
             const resultContent = document.getElementById('result-content');
             
             resultTitle.textContent = title;
-            resultContent.innerHTML = text; // Usamos innerHTML para renderizar los spans
+            resultContent.innerHTML = text;
             resultContainer.classList.remove('hidden');
         }
 
