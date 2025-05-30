@@ -146,6 +146,17 @@
         .hidden {
             display: none;
         }
+
+        .roman-numeral {
+            font-family: 'Times New Roman', serif;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .bold-roman {
+            font-family: 'Arial Unicode MS', sans-serif;
+            font-weight: bold;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
@@ -180,6 +191,21 @@
                 <p id="result-content" class="result-content"></p>
             </div>
         </div>
+
+        <div class="buttons" style="margin-top: 20px;">
+            <button onclick="convertToRoman()">Codificar numeros</button>
+            <button onclick="convertFromRoman()">Decodificar numeros</button>
+        </div>
+        
+        <div id="roman-result-container" class="result-container hidden">
+            <button class="copy-btn" onclick="copyRomanResult()">
+                <i class="far fa-copy"></i> Copiar
+            </button>
+            <div id="roman-result" class="result">
+                <div id="roman-result-title" class="result-title"></div>
+                <p id="roman-result-content" class="result-content"></p>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -189,21 +215,16 @@
             'a': '@', 's': '#', 'd': '$', 'f': '_', 'g': '&',
             'h': '-', 'j': '+', 'k': '(', 'l': ')', 'ñ': '/',
             'z': '*', 'x': '"', 'c': "'", 'v': ':', 'b': ';',
-            'n': '!', 'm': '?',
-            '0': '', '1': '𝐈', '2': ' 𝐈𝐈', '3': '𝐈𝐈𝐈', '4': '𝐈𝐕',
-            '5': '𝐕', '6': '𝐕𝐈', '7': '𝐕𝐈𝐈', '8': '𝐕𝐈𝐈𝐈', '9': ' 𝐈𝐗'
+            'n': '!', 'm': '?'
         };
 
-        const decodeMap = {
-            '@': 'a', '#': 's', '$': 'd', '_': 'f', '&': 'g',
-            '-': 'h', '+': 'j', '(': 'k', ')': 'l', '/': 'ñ',
-            '*': 'z', '"': 'x', "'": 'c', ':': 'v', ';': 'b',
-            '!': 'n', '?': 'm',
-            'θ': '0', '𝐈': '1', ' 𝐈𝐈': '2', '𝐈𝐈𝐈': '3', '𝐈𝐕': '4',
-            '𝐕': '5', '𝐕𝐈': '6', '𝐕𝐈𝐈': '7', '𝐕𝐈𝐈𝐈': '8', ' 𝐈𝐗': '9'
-        };
+        const decodeMap = {};
+        for (const key in codeMap) {
+            decodeMap[codeMap[key]] = key;
+        }
 
         let currentTranslatedText = ''; // Variable para almacenar el texto traducido
+        let currentRomanText = ''; // Variable para almacenar el texto de números romanos
 
         function startEncoding() {
             const input = prompt("Escribe el texto a codificar:");
@@ -216,13 +237,7 @@
         function startDecoding() {
             const input = prompt("Escribe el texto a decodificar:");
             if (input) {
-                // Primero buscamos los códigos F0-F9
-                let decodedText = input.replace(/F[0-9]/g, match => {
-                    return decodeMap[match] || match;
-                });
-                
-                // Luego decodificamos el resto de caracteres
-                currentTranslatedText = translate(decodedText, decodeMap);
+                currentTranslatedText = translate(input, decodeMap);
                 showResult("Texto decodificado:", currentTranslatedText);
             }
         }
@@ -242,10 +257,13 @@
             resultTitle.textContent = title;
             resultContent.textContent = text;
             resultContainer.classList.remove('hidden');
+            
+            // Ocultar el resultado romano si está visible
+            document.getElementById('roman-result-container').classList.add('hidden');
         }
 
         function copyResult() {
-            const copyBtn = document.querySelector('.copy-btn');
+            const copyBtn = document.querySelector('#result-container .copy-btn');
             
             // Aplicar efecto visual
             copyBtn.classList.add('copied');
@@ -261,6 +279,143 @@
                     // Fallback para navegadores antiguos
                     const textarea = document.createElement('textarea');
                     textarea.value = currentTranslatedText;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    
+                    setTimeout(() => {
+                        copyBtn.classList.remove('copied');
+                    }, 1000);
+                });
+        }
+
+        // Funciones para el conversor de números romanos
+        function convertToRoman() {
+            const input = prompt("Escribe el número a codificar:");
+            if (input) {
+                const num = parseInt(input);
+                if (isNaN(num) || num < 1 || num > 3999) {
+                    alert("Por favor ingresa un número entre 1 y 3999");
+                    return;
+                }
+                currentRomanText = toRoman(num);
+                showRomanResult("Número codificado:", formatRoman(currentRomanText));
+            }
+        }
+
+        function convertFromRoman() {
+            const input = prompt("Escribe el número a decodificar:");
+            if (input) {
+                const num = fromRoman(input.toUpperCase());
+                if (isNaN(num)) {
+                    alert("Número no válido");
+                    return;
+                }
+                currentRomanText = num.toString();
+                showRomanResult("Número decimal:", currentRomanText);
+            }
+        }
+
+        function toRoman(num) {
+            const romanNumerals = [
+                { value: 1000, symbol: 'M' },
+                { value: 900, symbol: 'CM' },
+                { value: 500, symbol: 'D' },
+                { value: 400, symbol: 'CD' },
+                { value: 100, symbol: 'C' },
+                { value: 90, symbol: 'XC' },
+                { value: 50, symbol: 'L' },
+                { value: 40, symbol: 'XL' },
+                { value: 10, symbol: 'X' },
+                { value: 9, symbol: 'IX' },
+                { value: 5, symbol: 'V' },
+                { value: 4, symbol: 'IV' },
+                { value: 1, symbol: 'I' }
+            ];
+            
+            let roman = '';
+            for (let i = 0; i < romanNumerals.length; i++) {
+                while (num >= romanNumerals[i].value) {
+                    roman += romanNumerals[i].symbol;
+                    num -= romanNumerals[i].value;
+                }
+            }
+            return roman;
+        }
+
+        function fromRoman(roman) {
+            const romanNumerals = {
+                'I': 1,
+                'V': 5,
+                'X': 10,
+                'L': 50,
+                'C': 100,
+                'D': 500,
+                'M': 1000
+            };
+            
+            let total = 0;
+            let current, previous = 0;
+            
+            for (let i = roman.length - 1; i >= 0; i--) {
+                current = romanNumerals[roman[i]];
+                if (current === undefined) return NaN;
+                if (current < previous) {
+                    total -= current;
+                } else {
+                    total += current;
+                }
+                previous = current;
+            }
+            return total;
+        }
+
+        function formatRoman(roman) {
+            // Convertir a caracteres Unicode bold (para el estilo solicitado)
+            const boldMap = {
+                'I': '𝐈',
+                'V': '𝐕',
+                'X': '𝐗',
+                'L': '𝐋',
+                'C': '𝐂',
+                'D': '𝐃',
+                'M': '𝐌'
+            };
+            
+            return roman.split('').map(char => boldMap[char] || char).join('');
+        }
+
+        function showRomanResult(title, text) {
+            const resultContainer = document.getElementById('roman-result-container');
+            const resultTitle = document.getElementById('roman-result-title');
+            const resultContent = document.getElementById('roman-result-content');
+            
+            resultTitle.textContent = title;
+            resultContent.innerHTML = text;
+            resultContainer.classList.remove('hidden');
+            
+            // Ocultar el otro resultado si está visible
+            document.getElementById('result-container').classList.add('hidden');
+        }
+
+        function copyRomanResult() {
+            const copyBtn = document.querySelector('#roman-result-container .copy-btn');
+            
+            // Aplicar efecto visual
+            copyBtn.classList.add('copied');
+            
+            navigator.clipboard.writeText(currentRomanText)
+                .then(() => {
+                    setTimeout(() => {
+                        copyBtn.classList.remove('copied');
+                    }, 1000);
+                })
+                .catch(err => {
+                    console.error('Error al copiar: ', err);
+                    // Fallback para navegadores antiguos
+                    const textarea = document.createElement('textarea');
+                    textarea.value = currentRomanText;
                     document.body.appendChild(textarea);
                     textarea.select();
                     document.execCommand('copy');
